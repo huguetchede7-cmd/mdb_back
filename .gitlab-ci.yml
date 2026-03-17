@@ -1,0 +1,63 @@
+stages:
+  - deploy
+
+.default_ssh:
+  image: ruby:3.1
+  before_script:
+    - set -e
+    - apt-get update -qq && apt-get install -y -qq openssh-client
+    - eval "$(ssh-agent -s)"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - |
+      if [ -z "$SSH_PRIVATE_KEY" ]; then
+        echo "❌ SSH_PRIVATE_KEY is missing"
+        exit 1
+      fi
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-add ~/.ssh/id_rsa
+    - |
+      if [ -n "$SSH_KNOWN_HOSTS" ]; then
+        echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+      fi
+
+deploy_prod:
+  stage: deploy
+  only:
+    - prod
+  extends: .default_ssh
+  script:
+    - |
+      ssh deploy_ci_cd@72.61.162.133 << 'EOF'
+        set -e
+
+        PM2_PROD_APP_NAME="live_oho_backend_api"
+        PROJECT_DIR="/home/oholeslunettes-api/htdocs/api.oholeslunettes.com"
+        BRANCH="prod"
+
+        echo "🕘 DEPLOY PROD STARTED"
+
+        cd "$PROJECT_DIR"
+
+        git fetch origin
+        git reset --hard origin/$BRANCH
+
+        export $(grep -v '^#' .env | grep -v '^$' | xargs)
+
+        npm ci
+        npm run migrate-prod
+        npm run seed-prod
+        npm run build
+
+        if pm2 list | grep -q "$PM2_PROD_APP_NAME"; then
+          pm2 reload "$PM2_PROD_APP_NAME"
+        else
+          pm2 start npm --name "$PM2_PROD_APP_NAME" -- run start:prod
+        fi
+
+        pm2 save
+
+        echo "✅ DEPLOY PROD FINISHED"
+      EOF
