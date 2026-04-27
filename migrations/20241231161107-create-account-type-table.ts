@@ -30,7 +30,7 @@ export async function up(queryInterface: QueryInterface) {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+//* eslint-disable-next-line @typescript-eslint/no-unused-vars*//
 export async function down(queryInterface: QueryInterface) {
   await queryInterface.dropTable('account_type');
 }
