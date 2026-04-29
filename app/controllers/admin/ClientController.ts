@@ -14,7 +14,6 @@ export default class ClientController {
       const limit = Number(req.query.limit) || apiHelpers.FETCH_LIMIT
       const offset = (currentPage - 1) * limit
       const search = (req.query.search as string)?.trim() || null
-
       const whereClause: any = {}
       if (search) {
         whereClause[Op.or] = [
@@ -23,18 +22,8 @@ export default class ClientController {
           { primary_phone: { [Op.like]: `%${search}%` } },
         ]
       }
-
-      const { count, rows } = await ClientModel.findAndCountAll({
-        where: whereClause,
-        limit,
-        offset,
-        order: [['created_at', 'DESC']],
-      })
-
-      responseJson.data = {
-        pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }),
-        list: rows.map((c) => c.get()),
-      }
+      const { count, rows } = await ClientModel.findAndCountAll({ where: whereClause, limit, offset, order: [['created_at', 'DESC']] })
+      responseJson.data = { pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }), list: rows.map((c) => c.get()) }
       responseJson.statut = true
       responseJson.message = 'Liste des clients récupérée avec succès'
       res.status(200).json(responseJson)
@@ -49,10 +38,7 @@ export default class ClientController {
     try {
       const data = req.body
       const nowDate = Sanitizer.getTimeByTimezone()
-
-      // Générer numéro de membre unique
       const memberNumber = await Sanitizer.uniqueData(ClientModel, 'member_number', Sanitizer.generateNum(6, 'MDB'))
-
       const client = await ClientModel.create({
         last_name: data.last_name,
         first_name: data.first_name,
@@ -73,7 +59,6 @@ export default class ClientController {
         created_at: nowDate,
         updated_at: nowDate,
       })
-
       responseJson.statut = true
       responseJson.message = 'Client créé avec succès'
       responseJson.data = client.get()
@@ -102,8 +87,7 @@ export default class ClientController {
     try {
       const client = await ClientModel.findOne({ where: { id: req.params.id } })
       if (!client) throw new Error('__messageFormatted__Client introuvable')
-      const data = req.body
-      await client.update({ ...data, updated_at: Sanitizer.getTimeByTimezone() })
+      await client.update({ ...req.body, updated_at: Sanitizer.getTimeByTimezone() })
       responseJson.statut = true
       responseJson.message = 'Client mis à jour avec succès'
       responseJson.data = client.get()

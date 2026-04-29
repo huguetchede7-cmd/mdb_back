@@ -32,6 +32,12 @@ router.get('/app/user/administrator/show/:id', CAP([AdminPermission.ADMINS]), Ad
 router.put('/app/user/administrator/blockUser/:id', CAP([AdminPermission.ADMINS]), AdminUserController.blockUser);
 router.put('/app/user/administrator/unblockUser/:id', CAP([AdminPermission.ADMINS]), AdminUserController.unblockUser);
 
+// Clients
+router.get('/app/clients', ClientController.list);
+router.post('/app/clients', ClientController.create);
+router.get('/app/clients/:id', ClientController.show);
+router.put('/app/clients/:id', ClientController.update);
+router.delete('/app/clients/:id', ClientController.destroy);
 
 // Clients
 router.get('/app/clients', ClientController.list);
