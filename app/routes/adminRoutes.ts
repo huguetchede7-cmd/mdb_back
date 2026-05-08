@@ -10,6 +10,7 @@ import AdminRolePermissionAdminAppController from '../controllers/admin/AdminRol
 import { AdminPermission } from '../constants/admin-permission'
 import { CheckAdminPermission } from '../middleware/CheckAdminPermission'
 import ClientController from '../controllers/admin/ClientController'
+import CompteController from '../controllers/admin/CompteController'
 
 
 const router = express.Router()
@@ -38,6 +39,13 @@ router.post('/app/clients', ClientController.create);
 router.get('/app/clients/:id', ClientController.show);
 router.put('/app/clients/:id', ClientController.update);
 router.delete('/app/clients/:id', ClientController.destroy);
+
+// Comptes
+router.get('/app/comptes', CompteController.list);
+router.post('/app/comptes', CompteController.create);
+router.get('/app/comptes/client/:client_id', CompteController.getByClient);
+router.get('/app/comptes/:id', CompteController.show);
+router.delete('/app/comptes/:id', CompteController.destroy);
 
 // Logout
 router.post('/app/auth/logout', AuthAdminController.logout)

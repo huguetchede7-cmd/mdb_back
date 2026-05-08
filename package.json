@@ -1,7 +1,7 @@
 {
-  "name": "mdb-api",
+  "name": "microfinance-api",
   "version": "1.0.0",
-  "description": "MDB MICRO FINANCE Backend API",
+  "description": "microfinance Backend API",
   "main": "index.ts",
   "scripts": {
     "start": "nodemon --watch . --exec ts-node ./index.ts",
