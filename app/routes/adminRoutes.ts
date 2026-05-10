@@ -11,6 +11,8 @@ import { AdminPermission } from '../constants/admin-permission'
 import { CheckAdminPermission } from '../middleware/CheckAdminPermission'
 import ClientController from '../controllers/admin/ClientController'
 import CompteController from '../controllers/admin/CompteController'
+import DepotController from '../controllers/admin/DepotController'
+import RetraitController from '../controllers/admin/RetraitController'
 
 
 const router = express.Router()
@@ -46,6 +48,16 @@ router.post('/app/comptes', CompteController.create);
 router.get('/app/comptes/client/:client_id', CompteController.getByClient);
 router.get('/app/comptes/:id', CompteController.show);
 router.delete('/app/comptes/:id', CompteController.destroy);
+
+// Depots
+router.get('/app/depots', DepotController.list);
+router.post('/app/depots', DepotController.create);
+router.get('/app/depots/compte/:compte_id', DepotController.getByCompte);
+
+// Retraits
+router.get('/app/retraits', RetraitController.list);
+router.post('/app/retraits', RetraitController.create);
+router.get('/app/retraits/compte/:compte_id', RetraitController.getByCompte);
 
 // Logout
 router.post('/app/auth/logout', AuthAdminController.logout)
