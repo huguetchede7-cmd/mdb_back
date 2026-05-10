@@ -8,44 +8,50 @@ import path from 'path'
 
 export default class ClientController {
 
-    static async list(req: Request, res: Response): Promise<void> {
-        const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
-        try {
-            const currentPage = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || apiHelpers.FETCH_LIMIT
-            const offset = (currentPage - 1) * limit
-            const search = (req.query.search as string)?.trim() || null
+   static async list(req: Request, res: Response): Promise<void> {
+    const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
+    try {
+        const currentPage = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || apiHelpers.FETCH_LIMIT
+        const offset = (currentPage - 1) * limit
+        const search = (req.query.search as string)?.trim() || null
 
-            const whereClause: any = {}
+        const whereClause: any = {}
 
-            if (search) {
-                whereClause[Op.or] = [
-                    { last_name: { [Op.like]: `%${search}%` } },
-                    { first_name: { [Op.like]: `%${search}%` } },
-                    { primary_phone: { [Op.like]: `%${search}%` } },
-                    { member_number: { [Op.like]: `%${search}%` } },
-                ]
-            }
-
-            const { count, rows } = await ClientModel.findAndCountAll({
-                where: whereClause,
-                limit,
-                offset,
-                order: [['created_at', 'DESC']]
-            })
-
-            responseJson.data = {
-                pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }),
-                list: rows.map((c) => c.get())
-            }
-            responseJson.statut = true
-            responseJson.message = 'Liste des clients récupérée avec succès'
-            res.status(200).json(responseJson)
-        } catch (error) {
-            LogHelpers?.showException?.(error as Error)
-            res.status(400).json(apiHelpers.bindError(error as Error))
+        if (search) {
+            whereClause[Op.or] = [
+                { last_name: { [Op.like]: `%${search}%` } },
+                { first_name: { [Op.like]: `%${search}%` } },
+                { primary_phone: { [Op.like]: `%${search}%` } },
+                { member_number: { [Op.like]: `%${search}%` } },
+            ]
         }
+
+        const { count, rows } = await ClientModel.findAndCountAll({
+            where: whereClause,
+            limit,
+            offset,
+            order: [['created_at', 'DESC']]
+        })
+
+        const clientsWithComptes = await Promise.all(rows.map(async (client) => {
+            const CompteModel = (await import('../../../models/CompteModel')).default
+            const nombreComptes = await CompteModel.count({ where: { client_id: client.getDataValue('id') } })
+            return { ...client.get(), nombre_comptes: nombreComptes }
+        }))
+
+        responseJson.data = {
+            pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }),
+            list: clientsWithComptes
+        }
+        responseJson.statut = true
+        responseJson.message = 'Liste des clients récupérée avec succès'
+        res.status(200).json(responseJson)
+    } catch (error) {
+        LogHelpers?.showException?.(error as Error)
+        res.status(400).json(apiHelpers.bindError(error as Error))
     }
+}
 
     static async create(req: Request, res: Response): Promise<void> {
         const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
