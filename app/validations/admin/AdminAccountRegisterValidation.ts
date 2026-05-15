@@ -29,6 +29,11 @@ export const AdminAccountRegisterValidation = [
         }).escape()
         .bail(),
 
+        body('admin_role_id')
+    .notEmpty().withMessage(Messengers.error.champs.requis)
+    .isInt().withMessage("Le rôle est invalide")
+    .bail(),
+
     body('password')
         .notEmpty().withMessage(Messengers.error.champs.requis)
         .isLength({ min: 6 }).withMessage("6 " + Messengers.error.string.min)

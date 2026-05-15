@@ -1,6 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/db';
 import { ACCOUNT_TYPES, AccountTypeModel } from './AccountTypeModel';
+import AdminRoleModel from './AdminRoleModel';        // ← Important
 import modelHelpers from '../app/helpers/modelHelpers';
 import he from 'he';
 import FileHelpers from '../app/helpers/fileHelpers';
@@ -27,6 +28,7 @@ interface UserAttributes {
     updated_at: Date | string | null;
     password?: string | null;
     deleted_at: Date | string | null;
+    admin_role_id?: number | null;
 }
 
 class UserModel extends Model<UserAttributes> implements UserAttributes {
@@ -50,6 +52,8 @@ class UserModel extends Model<UserAttributes> implements UserAttributes {
     public updated_at!: Date | string | null;
     public password!: string | null;
     public deleted_at!: Date | string | null;
+    public admin_role_id?: number | null;
+
     public toJSON!: () => Omit<UserAttributes, 'id' | 'password' | 'jwt_token'>;
 }
 
@@ -179,6 +183,10 @@ UserModel.init({
             return modelHelpers.dateFormat(this.getDataValue("deleted_at"));
         },
     },
+    admin_role_id: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+    },
 }, {
     sequelize,
     tableName: 'users',
@@ -189,8 +197,14 @@ UserModel.init({
     },
 });
 
-// Associations
+// ==================== ASSOCIATIONS ====================
 UserModel.belongsTo(AccountTypeModel, { foreignKey: 'account_type', as: 'account_type_detail' });
 UserModel.belongsTo(UserModel, { foreignKey: 'created_by', as: 'creator' });
+
+// Relation avec le rôle Admin
+UserModel.belongsTo(AdminRoleModel, { 
+    foreignKey: 'admin_role_id', 
+    as: 'role' 
+});
 
 export default UserModel;

@@ -59,6 +59,45 @@ router.get('/app/retraits', RetraitController.list);
 router.post('/app/retraits', RetraitController.create);
 router.get('/app/retraits/compte/:compte_id', RetraitController.getByCompte);
 
+router.get('/app/dashboard/stats', async (req, res) => {
+    const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
+    try {
+        const ClientModel = (await import('../../../models/ClientModel')).default
+        const CompteModel = (await import('../../../models/CompteModel')).default
+        const DepotModel = (await import('../../../models/DepotModel')).default
+        const RetraitModel = (await import('../../../models/RetraitModel')).default
+        const { Op } = await import('sequelize')
+        const today = new Date().toISOString().split('T')[0]
+
+        const [totalClients, totalComptes, totalDepots, totalRetraits, depotsAujourdhui, retraitsAujourdhui] = await Promise.all([
+            ClientModel.count(),
+            CompteModel.count(),
+            DepotModel.sum('montant'),
+            RetraitModel.sum('montant'),
+            DepotModel.sum('montant', { where: { date_depot: today } }),
+            RetraitModel.sum('montant', { where: { date_retrait: today } }),
+        ])
+
+        const dernierDepots = await DepotModel.findAll({ limit: 5, order: [['created_at', 'DESC']] })
+        const dernierRetraits = await RetraitModel.findAll({ limit: 5, order: [['created_at', 'DESC']] })
+
+        responseJson.statut = true
+        responseJson.data = {
+            total_clients: totalClients,
+            total_comptes: totalComptes,
+            total_depots: totalDepots || 0,
+            total_retraits: totalRetraits || 0,
+            depots_aujourdhui: depotsAujourdhui || 0,
+            retraits_aujourdhui: retraitsAujourdhui || 0,
+            derniers_depots: dernierDepots.map(d => d.get()),
+            derniers_retraits: dernierRetraits.map(r => r.get()),
+        }
+        res.status(200).json(responseJson)
+    } catch (error) {
+        res.status(400).json(apiHelpers.bindError(error as Error))
+    }
+})
+
 // Logout
 router.post('/app/auth/logout', AuthAdminController.logout)
 
