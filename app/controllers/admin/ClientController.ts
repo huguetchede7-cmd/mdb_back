@@ -60,11 +60,9 @@ export default class ClientController {
             const nowDate = Sanitizer.getTimeByTimezone()
 
             // Génération automatique du numéro membre CMMB
-            const memberNumber = await Sanitizer.uniqueData(
-                ClientModel, 
-                'member_number', 
-                `CMMB-${new Date().getFullYear()}-`
-            )
+           const timestamp = Date.now().toString().slice(-8)
+const random = Math.floor(Math.random() * 900 + 100).toString()
+const memberNumber = `cmmb-${new Date().getFullYear()}${timestamp}${random}`
 
             // Gestion de la photo
 let photoPath = null;

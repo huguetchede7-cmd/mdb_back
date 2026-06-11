@@ -1,5 +1,5 @@
-// config/config.js
 const path = require('path');
+require('dotenv').config();
 require('ts-node').register({
     transpileOnly: true
 });

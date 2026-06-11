@@ -14,6 +14,7 @@ interface DepotAttributes {
     mode_paiement?: string | null;
     reference?: string | null;
     observation?: string | null;
+    numero_versement?: number | null;
     status?: string;
     created_by?: number | null;
     created_at?: Date | string | null;
@@ -31,6 +32,7 @@ class DepotModel extends Model<DepotAttributes> implements DepotAttributes {
     declare mode_paiement: string | null;
     declare reference: string | null;
     declare observation: string | null;
+    declare numero_versement: number | null;
     declare status: string;
     declare created_by: number | null;
     declare created_at: Date | string | null;
@@ -48,6 +50,7 @@ DepotModel.init({
     mode_paiement: { type: DataTypes.STRING, allowNull: true },
     reference: { type: DataTypes.STRING, allowNull: true },
     observation: { type: DataTypes.TEXT, allowNull: true },
+    numero_versement: { type: DataTypes.INTEGER, allowNull: true, defaultValue: null },
     status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'success' },
     created_by: { type: DataTypes.INTEGER, allowNull: true },
     created_at: { type: DataTypes.DATE, allowNull: true, get() { return modelHelpers.dateFormat(this.getDataValue("created_at")); } },

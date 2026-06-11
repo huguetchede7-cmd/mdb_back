@@ -2,6 +2,7 @@ import apiHelpers from '../../helpers/apiHelpers'
 import { Request, Response } from 'express'
 import RetraitModel from '../../../models/RetraitModel'
 import CompteModel from '../../../models/CompteModel'
+import ClientModel from '../../../models/ClientModel'
 import { LogHelpers } from '../../helpers/LogHelpers'
 import { Sanitizer } from '../../helpers/sanitizer'
 
@@ -13,12 +14,20 @@ export default class RetraitController {
             const currentPage = Number(req.query.page) || 1
             const limit = Number(req.query.limit) || apiHelpers.FETCH_LIMIT
             const offset = (currentPage - 1) * limit
+
             const { count, rows } = await RetraitModel.findAndCountAll({
-                limit, offset, order: [['created_at', 'DESC']]
+                include: [
+                    { model: ClientModel, as: 'client', attributes: ['id', 'last_name', 'first_name'] },
+                    { model: CompteModel, as: 'compte', attributes: ['id', 'numero_compte'] }
+                ],
+                limit,
+                offset,
+                order: [['created_at', 'DESC']]
             })
+
             responseJson.data = {
                 pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }),
-                list: rows.map((r) => r.get())
+                list: rows.map((r) => r.get({ plain: true }))
             }
             responseJson.statut = true
             res.status(200).json(responseJson)
@@ -49,16 +58,42 @@ export default class RetraitController {
             const data = req.body
             const nowDate = Sanitizer.getTimeByTimezone()
 
-            // Vérifier le solde
-            const compte = await CompteModel.findOne({ where: { id: data.compte_id } })
-            if (!compte) throw new Error('__messageFormatted__Compte introuvable')
-            if (Number(compte.getDataValue('solde')) < Number(data.montant)) {
+          const compte = await CompteModel.findOne({ where: { id: data.compte_id } })
+if (!compte) throw new Error('__messageFormatted__Compte introuvable')
+
+const typeCompte = compte.getDataValue('type_compte')
+const dateEcheance = compte.getDataValue('date_echeance')
+
+if (typeCompte === 'epargne_terme') {
+    if (!dateEcheance) {
+        throw new Error("__messageFormatted__Ce compte à terme ne peut pas faire l'objet d'un retrait : aucune date d'échéance définie")
+    }
+    const today = new Date()
+    const echeance = new Date(dateEcheance)
+    if (today < echeance) {
+        const dateFormatee = echeance.toLocaleDateString('fr-FR')
+        throw new Error(`__messageFormatted__Ce compte à terme est bloqué jusqu'au ${dateFormatee}. Aucun retrait n'est possible avant cette date`)
+    }
+}
+
+const soldeActuel = Number(compte.getDataValue('solde'))
+            const soldeInitial = Number(compte.getDataValue('solde_initial'))
+            const montant = Number(data.montant)
+
+            if (montant <= 0) {
+                throw new Error('__messageFormatted__Le montant doit être supérieur à 0')
+            }
+
+            if (soldeActuel < montant) {
                 throw new Error('__messageFormatted__Solde insuffisant pour effectuer ce retrait')
+            }
+
+            if ((soldeActuel - montant) < soldeInitial) {
+                throw new Error(`__messageFormatted__Le solde minimum de ${soldeInitial.toLocaleString()} FCFA (solde d'ouverture) doit être conservé et ne peut pas être retiré`)
             }
 
             const numeroTransaction = await Sanitizer.uniqueData(RetraitModel, 'numero_transaction', Sanitizer.generateNum(8, 'RET'))
 
-            // Créer le retrait
             const retrait = await RetraitModel.create({
                 compte_id: data.compte_id,
                 client_id: data.client_id,
@@ -73,8 +108,7 @@ export default class RetraitController {
                 updated_at: nowDate,
             })
 
-            // Mettre à jour le solde du compte
-            const nouveauSolde = Number(compte.getDataValue('solde')) - Number(data.montant)
+            const nouveauSolde = soldeActuel - montant
             await compte.update({ solde: nouveauSolde, updated_at: nowDate })
 
             responseJson.statut = true

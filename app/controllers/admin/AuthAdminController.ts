@@ -11,7 +11,6 @@ import { LogHelpers } from "../../helpers/LogHelpers"
 import { NotificationHelper } from "../../helpers/NotificationHelper"
 import { BcryptCheck } from "../../helpers/bcryptHelpers"
 import AdminRolePermissionModel from '../../../models/AdminRolePermissionModel'
-import { Op } from 'sequelize'
 import AdminRoleModel from '../../../models/AdminRoleModel'
 
 export class AuthAdminController {
@@ -31,8 +30,11 @@ export class AuthAdminController {
       }
 
       const data = matchedData(req)
-      const targetUser = await UserModel.findOne({ where: { email: data.email } })
-      const targetUserDetail = targetUser?.get()
+     const targetUser = await UserModel.findOne({ 
+  where: { email: data.email },
+  attributes: { include: ['password'] }
+     })
+     const targetUserDetail = targetUser?.get({ plain: true })
 
       if (targetUserDetail?.account_type != ACCOUNT_TYPES.ADMIN) {
         throw new Error("__messageFormatted__email__" + Messengers.error.email.aucun_compte)
@@ -42,7 +44,10 @@ export class AuthAdminController {
         throw new Error("__messageFormatted__email__" + Messengers.error.compte.statut_bloquer)
       }
 
-      const isPasswordMatch = await BcryptCheck(data.password, targetUserDetail.password as string)
+console.log("Password saisi :", data.password);
+console.log("Password en base :", targetUserDetail.password);
+const isPasswordMatch = await BcryptCheck(data.password, targetUserDetail.password as string)
+console.log("Match :", isPasswordMatch);
       if (!isPasswordMatch) {
         throw new Error("__messageFormatted__password__" + Messengers.error.password.incorrect)
       }
@@ -92,34 +97,25 @@ export class AuthAdminController {
     try {
       const newJwt = JWTHelper.generateToken(userDetail.username)
       await UserModel.update({ jwt_token: newJwt }, { where: { id: userDetail.id } })
-      let roles;
-/*
-      if (userDetail.id === 1) {
-        //Super Admin → tous les rôles
-        roles = await AdminRoleModel.scope('orderByIdAsc').findAll({
-          order: [['id', 'DESC']],
-        });
-      } else {
-        //Admin normal → rôles assignés uniquement
-        const permissions = await AdminRolePermissionModel.findAll({
-          where: { admin_id: userDetail.id },
-          attributes: ['role_id'],
-        });
+    
+     const { username, fullname, avatar, email, phone, kyc, account_type } = userDetail
 
-        const roleIds = permissions.map(p => p.get().role_id);
+// Récupérer les rôles de l'utilisateur
+const permissions = await AdminRolePermissionModel.findAll({
+  where: { admin_id: userDetail.id },
+  include: [{ model: AdminRoleModel, as: 'role', attributes: ['id', 'title', 'slug', 'icon'] }]
+});
 
-        roles = await AdminRoleModel.scope('orderByIdAsc').findAll({
-          where: {
-            id: { [Op.in]: roleIds },
-          },
-          order: [['id', 'DESC']],
-        });
-      }*/
-      const { username, fullname, avatar, email, phone, kyc, account_type } = userDetail
+let roles = permissions.map((p: any) => p.get({ plain: true })?.role).filter(Boolean);
 
-      responseJson.data = { token: newJwt, username, fullname, avatar, email, phone, kyc, account_type, roles }
-      responseJson.message = "Connexion effectuée avec succès"
-      responseJson.statut = true
+// Si aucun rôle assigné → super admin, tous les accès
+if (roles.length === 0) {
+  const allRoles = await AdminRoleModel.findAll();
+  roles = allRoles.map((r: any) => r.get({ plain: true }));
+}
+responseJson.data = { token: newJwt, username, fullname, avatar, email, phone, kyc, account_type, roles }
+responseJson.message = "Connexion effectuée avec succès"
+responseJson.statut = true
     } catch (error) {
       LogHelpers.showException(error as Error)
       responseJson.statut = false

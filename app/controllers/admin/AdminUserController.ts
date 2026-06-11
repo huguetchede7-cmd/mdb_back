@@ -159,6 +159,7 @@ export default class AdminUserController {
         randomName
       )
       /**Créer admin */
+      console.log("Password reçu :", data.password);
       const newAdmin = await UserModel.create(
         {
           username,
@@ -394,4 +395,23 @@ export default class AdminUserController {
       return;
     }
   }
+  static async deleteAdmin(req: Request, res: Response): Promise<void> {
+  const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
+  try {
+    const userId = req.params.id
+    const user = await UserModel.findOne({
+      where: { id: userId, account_type: ACCOUNT_TYPES.ADMIN }
+    })
+    if (!user) {
+      throw new Error('__messageFormatted__Utilisateur non trouvé')
+    }
+    await user.destroy()
+    responseJson.statut = true
+    responseJson.message = 'Utilisateur supprimé avec succès'
+    res.status(200).json(responseJson)
+  } catch (error) {
+    LogHelpers?.showException?.(error as Error)
+    res.status(400).json(apiHelpers.bindError(error as Error))
+  }
+}
 }

@@ -21,7 +21,7 @@ export async function up(queryInterface: QueryInterface) {
             unique: true,
         },
         type_compte: {
-            type: DataTypes.ENUM('epargne_ordinaire', 'epargne_terme', 'courant', 'joint'),
+            type: DataTypes.ENUM('epargne_ordinaire', 'epargne_terme'),
             allowNull: false,
         },
         solde: {

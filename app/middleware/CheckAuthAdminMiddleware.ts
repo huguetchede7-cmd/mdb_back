@@ -6,7 +6,7 @@ import Messengers from '../helpers/messengers';
 
 export class CheckAuthAdminMiddleware {
     static process: RequestHandler = async (req, res, next) => {
-        const token = req.headers.authorization;
+        const token = req.headers.authorization?.replace('Bearer ', '');
         const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON };
 
         if (!token) {

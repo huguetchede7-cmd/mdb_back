@@ -2,31 +2,40 @@ import apiHelpers from '../../helpers/apiHelpers'
 import { Request, Response } from 'express'
 import DepotModel from '../../../models/DepotModel'
 import CompteModel from '../../../models/CompteModel'
+import ClientModel from '../../../models/ClientModel'
 import { LogHelpers } from '../../helpers/LogHelpers'
 import { Sanitizer } from '../../helpers/sanitizer'
 
 export default class DepotController {
 
-    static async list(req: Request, res: Response): Promise<void> {
-        const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
-        try {
-            const currentPage = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || apiHelpers.FETCH_LIMIT
-            const offset = (currentPage - 1) * limit
-            const { count, rows } = await DepotModel.findAndCountAll({
-                limit, offset, order: [['created_at', 'DESC']]
-            })
-            responseJson.data = {
-                pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }),
-                list: rows.map((d) => d.get())
-            }
-            responseJson.statut = true
-            res.status(200).json(responseJson)
-        } catch (error) {
-            LogHelpers?.showException?.(error as Error)
-            res.status(400).json(apiHelpers.bindError(error as Error))
+   static async list(req: Request, res: Response): Promise<void> {
+    const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
+    try {
+        const currentPage = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || apiHelpers.FETCH_LIMIT
+        const offset = (currentPage - 1) * limit
+
+        const { count, rows } = await DepotModel.findAndCountAll({
+            include: [
+                { model: ClientModel, as: 'client', attributes: ['id', 'last_name', 'first_name'] },
+                { model: CompteModel, as: 'compte', attributes: ['id', 'numero_compte'] }
+            ],
+            limit,
+            offset,
+            order: [['created_at', 'DESC']]
+        })
+
+        responseJson.data = {
+            pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }),
+            list: rows.map((d) => d.get({ plain: true }))
         }
+        responseJson.statut = true
+        res.status(200).json(responseJson)
+    } catch (error) {
+        LogHelpers?.showException?.(error as Error)
+        res.status(400).json(apiHelpers.bindError(error as Error))
     }
+}
 
     static async getByCompte(req: Request, res: Response): Promise<void> {
         const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }

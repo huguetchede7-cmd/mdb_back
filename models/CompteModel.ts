@@ -7,7 +7,7 @@ interface CompteAttributes {
     id?: number;
     client_id: number;
     numero_compte: string;
-    type_compte: 'epargne_ordinaire' | 'epargne_terme' | 'courant' | 'joint';
+    type_compte: 'epargne_ordinaire' | 'epargne_terme' ;
     solde?: number;
     solde_initial?: number;
     status?: 'active' | 'inactive' | 'bloque';
@@ -16,13 +16,16 @@ interface CompteAttributes {
     created_at?: Date | string | null;
     updated_at?: Date | string | null;
     deleted_at?: Date | string | null;
+    date_echeance?: string | null;
+    taux_interet?: number | null;
+    montant_versement_mensuel?: number | null;
 }
 
 class CompteModel extends Model<CompteAttributes> implements CompteAttributes {
     public id!: number;
     public client_id!: number;
     public numero_compte!: string;
-    public type_compte!: 'epargne_ordinaire' | 'epargne_terme' | 'courant' | 'joint';
+    public type_compte!: 'epargne_ordinaire' | 'epargne_terme';
     public solde!: number;
     public solde_initial!: number;
     public status!: 'active' | 'inactive' | 'bloque';
@@ -31,6 +34,9 @@ class CompteModel extends Model<CompteAttributes> implements CompteAttributes {
     public created_at!: Date | string | null;
     public updated_at!: Date | string | null;
     public deleted_at!: Date | string | null;
+    public date_echeance!: string | null;
+    public taux_interet!: number | null;
+    public montant_versement_mensuel!: number | null;
 }
 
 CompteModel.init({
@@ -42,7 +48,7 @@ CompteModel.init({
     },
     numero_compte: { type: DataTypes.STRING, allowNull: false, unique: true },
     type_compte: {
-        type: DataTypes.ENUM('epargne_ordinaire', 'epargne_terme', 'courant', 'joint'),
+        type: DataTypes.ENUM('epargne_ordinaire', 'epargne_terme'),
         allowNull: false,
     },
     solde: { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0 },
@@ -53,6 +59,9 @@ CompteModel.init({
         defaultValue: 'active',
     },
     date_ouverture: { type: DataTypes.DATEONLY, allowNull: false },
+    date_echeance: { type: DataTypes.DATEONLY, allowNull: true },
+    taux_interet: { type: DataTypes.DECIMAL(5, 2), allowNull: true },
+    montant_versement_mensuel: { type: DataTypes.DECIMAL(15, 2), allowNull: true },
     created_by: { type: DataTypes.INTEGER, allowNull: true },
     created_at: {
         type: DataTypes.DATE,
