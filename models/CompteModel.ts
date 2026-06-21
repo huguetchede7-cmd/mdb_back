@@ -10,7 +10,7 @@ interface CompteAttributes {
     type_compte: 'epargne_ordinaire' | 'epargne_terme' ;
     solde?: number;
     solde_initial?: number;
-    status?: 'active' | 'inactive' | 'bloque';
+    status?: 'active' | 'inactive' | 'bloque' | 'cloture' ;
     date_ouverture: string;
     created_by?: number | null;
     created_at?: Date | string | null;
@@ -28,7 +28,7 @@ class CompteModel extends Model<CompteAttributes> implements CompteAttributes {
     public type_compte!: 'epargne_ordinaire' | 'epargne_terme';
     public solde!: number;
     public solde_initial!: number;
-    public status!: 'active' | 'inactive' | 'bloque';
+    public status!: 'active' | 'inactive' | 'bloque' | 'cloture' ;
     public date_ouverture!: string;
     public created_by!: number | null;
     public created_at!: Date | string | null;
@@ -54,7 +54,7 @@ CompteModel.init({
     solde: { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0 },
     solde_initial: { type: DataTypes.DECIMAL(15, 2), allowNull: true, defaultValue: 0 },
     status: {
-        type: DataTypes.ENUM('active', 'inactive', 'bloque'),
+        type: DataTypes.ENUM('active', 'inactive', 'bloque', 'cloture' ),
         allowNull: false,
         defaultValue: 'active',
     },

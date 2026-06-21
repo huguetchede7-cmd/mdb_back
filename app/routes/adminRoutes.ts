@@ -82,8 +82,28 @@ router.get('/app/dashboard/stats', async (req, res) => {
     const CompteModel = (await import('../../models/CompteModel')).default
     const DepotModel = (await import('../../models/DepotModel')).default
     const RetraitModel = (await import('../../models/RetraitModel')).default
+    const AdminRolePermissionModel = (await import('../../models/AdminRolePermissionModel')).default
+    const AdminRoleModel = (await import('../../models/AdminRoleModel')).default
 
     const today = new Date().toISOString().split('T')[0]
+    const authUserId = Number(req.headers['auth_user'])
+
+    const userRoles = await AdminRolePermissionModel.findAll({
+      where: { admin_id: authUserId },
+      include: [{ model: AdminRoleModel, as: 'role', attributes: ['slug'] }]
+    })
+
+    const slugs = userRoles.map((r: any) => r.get({ plain: true }).role?.slug).filter(Boolean)
+    const isAdmin = slugs.includes('admin') || slugs.length === 0
+    const isCashier = slugs.includes('cashier') && !isAdmin
+
+    const baseWhere = isCashier ? { created_by: authUserId } : {}
+    const baseWhereToday = isCashier
+      ? { created_by: authUserId, date_depot: today }
+      : { date_depot: today }
+    const baseWhereTodayRetrait = isCashier
+      ? { created_by: authUserId, date_retrait: today }
+      : { date_retrait: today }
 
     const [
       totalClients,
@@ -95,23 +115,23 @@ router.get('/app/dashboard/stats', async (req, res) => {
     ] = await Promise.all([
       ClientModel.count(),
       CompteModel.count(),
-      DepotModel.sum('montant'),
-      RetraitModel.sum('montant'),
-      DepotModel.sum('montant', { where: { date_depot: today } }),
-      RetraitModel.sum('montant', { where: { date_retrait: today } }),
+      DepotModel.sum('montant', { where: baseWhere }),
+      RetraitModel.sum('montant', { where: baseWhere }),
+      DepotModel.sum('montant', { where: baseWhereToday }),
+      RetraitModel.sum('montant', { where: baseWhereTodayRetrait }),
     ])
 
     const dernierDepots = await DepotModel.findAll({
-  where: { date_depot: today },
-  limit: 5,
-  order: [['created_at', 'DESC']]
-})
+      where: baseWhereToday,
+      limit: 5,
+      order: [['created_at', 'DESC']]
+    })
 
-const dernierRetraits = await RetraitModel.findAll({
-  where: { date_retrait: today },
-  limit: 5,
-  order: [['created_at', 'DESC']]
-})
+    const dernierRetraits = await RetraitModel.findAll({
+      where: baseWhereTodayRetrait,
+      limit: 5,
+      order: [['created_at', 'DESC']]
+    })
 
     responseJson.statut = true
     responseJson.data = {
@@ -141,19 +161,37 @@ router.get("/transactions", async (req, res) => {
     const RetraitModel = (await import('../../models/RetraitModel')).default;
     const ClientModel = (await import('../../models/ClientModel')).default;
     const CompteModel = (await import('../../models/CompteModel')).default;
+    const UserModel = (await import('../../models/UserModel')).default;
+    const AdminRolePermissionModel = (await import('../../models/AdminRolePermissionModel')).default;
+    const AdminRoleModel = (await import('../../models/AdminRoleModel')).default;
+
+    const authUserId = Number(req.headers['auth_user']) || null;
+
+    const userRoles = authUserId ? await AdminRolePermissionModel.findAll({
+      where: { admin_id: authUserId },
+      include: [{ model: AdminRoleModel, as: 'role', attributes: ['slug'] }]
+    }) : [];
+
+    const slugs = userRoles.map((r: any) => r.get({ plain: true }).role?.slug).filter(Boolean);
+    const isCashier = slugs.includes('cashier') && !slugs.includes('savings_officer') && !slugs.includes('admin');
+    const whereClause = isCashier ? { created_by: authUserId } : {};
 
     const depots = await DepotModel.findAll({
+      where: whereClause,
       include: [
         { model: ClientModel, as: 'client', attributes: ['first_name', 'last_name'] },
-        { model: CompteModel, as: 'compte', attributes: ['numero_compte'] }
+        { model: CompteModel, as: 'compte', attributes: ['numero_compte'] },
+        { model: UserModel, as: 'creator', attributes: ['firstname', 'lastname'] }
       ],
       order: [['created_at', 'DESC']]
     });
 
     const retraits = await RetraitModel.findAll({
+      where: whereClause,
       include: [
         { model: ClientModel, as: 'client', attributes: ['first_name', 'last_name'] },
-        { model: CompteModel, as: 'compte', attributes: ['numero_compte'] }
+        { model: CompteModel, as: 'compte', attributes: ['numero_compte'] },
+        { model: UserModel, as: 'creator', attributes: ['firstname', 'lastname'] }
       ],
       order: [['created_at', 'DESC']]
     });
@@ -170,7 +208,10 @@ router.get("/transactions", async (req, res) => {
           type: 'depot',
           montant: Number(data.montant || 0),
           date: data.date_depot || data.created_at,
-          status: data.status || 'success'
+          status: data.status || 'success',
+          effectue_par: data.creator
+            ? `${data.creator.firstname} ${data.creator.lastname}`
+            : 'N/A'
         };
       }),
       ...retraits.map((r: any) => {
@@ -184,7 +225,10 @@ router.get("/transactions", async (req, res) => {
           type: 'retrait',
           montant: Number(data.montant || 0),
           date: data.date_retrait || data.created_at,
-          status: data.status || 'success'
+          status: data.status || 'success',
+          effectue_par: data.creator
+            ? `${data.creator.firstname} ${data.creator.lastname}`
+            : 'N/A'
         };
       })
     ];

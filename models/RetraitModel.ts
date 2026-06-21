@@ -3,7 +3,7 @@ import sequelize from '../config/db';
 import modelHelpers from '../app/helpers/modelHelpers';
 import CompteModel from './CompteModel';
 import ClientModel from './ClientModel';
-
+import UserModel from './UserModel';
 interface RetraitAttributes {
     id?: number;
     compte_id: number;
@@ -62,5 +62,6 @@ RetraitModel.init({
 
 RetraitModel.belongsTo(CompteModel, { foreignKey: 'compte_id', as: 'compte' });
 RetraitModel.belongsTo(ClientModel, { foreignKey: 'client_id', as: 'client' });
+RetraitModel.belongsTo(UserModel, { foreignKey: 'created_by', as: 'creator' });
 
 export default RetraitModel;

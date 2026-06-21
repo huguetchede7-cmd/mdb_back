@@ -3,6 +3,7 @@ import sequelize from '../config/db';
 import modelHelpers from '../app/helpers/modelHelpers';
 import CompteModel from './CompteModel';
 import ClientModel from './ClientModel';
+import UserModel from './UserModel';
 
 interface DepotAttributes {
     id?: number;
@@ -65,5 +66,6 @@ DepotModel.init({
 
 DepotModel.belongsTo(CompteModel, { foreignKey: 'compte_id', as: 'compte' });
 DepotModel.belongsTo(ClientModel, { foreignKey: 'client_id', as: 'client' });
+DepotModel.belongsTo(UserModel, { foreignKey: 'created_by', as: 'creator' });
 
 export default DepotModel;

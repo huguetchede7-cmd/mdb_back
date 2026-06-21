@@ -9,33 +9,47 @@ import { Sanitizer } from '../../helpers/sanitizer'
 export default class RetraitController {
 
     static async list(req: Request, res: Response): Promise<void> {
-        const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
-        try {
-            const currentPage = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || apiHelpers.FETCH_LIMIT
-            const offset = (currentPage - 1) * limit
+    const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
+    try {
+        const currentPage = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || apiHelpers.FETCH_LIMIT
+        const offset = (currentPage - 1) * limit
 
-            const { count, rows } = await RetraitModel.findAndCountAll({
-                include: [
-                    { model: ClientModel, as: 'client', attributes: ['id', 'last_name', 'first_name'] },
-                    { model: CompteModel, as: 'compte', attributes: ['id', 'numero_compte'] }
-                ],
-                limit,
-                offset,
-                order: [['created_at', 'DESC']]
-            })
+        const authUserId = Number(req.headers['auth_user']) || null
+        const AdminRolePermissionModel = (await import('../../../models/AdminRolePermissionModel')).default
+        const AdminRoleModel = (await import('../../../models/AdminRoleModel')).default
 
-            responseJson.data = {
-                pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }),
-                list: rows.map((r) => r.get({ plain: true }))
-            }
-            responseJson.statut = true
-            res.status(200).json(responseJson)
-        } catch (error) {
-            LogHelpers?.showException?.(error as Error)
-            res.status(400).json(apiHelpers.bindError(error as Error))
+        const userRoles = authUserId ? await AdminRolePermissionModel.findAll({
+            where: { admin_id: authUserId },
+            include: [{ model: AdminRoleModel, as: 'role', attributes: ['slug'] }]
+        }) : []
+
+        const slugs = userRoles.map((r: any) => r.get({ plain: true }).role?.slug).filter(Boolean)
+        const isCashier = slugs.includes('cashier') && !slugs.includes('savings_officer') && !slugs.includes('admin')
+        const whereClause = isCashier ? { created_by: authUserId } : {}
+
+        const { count, rows } = await RetraitModel.findAndCountAll({
+            where: whereClause,
+            include: [
+                { model: ClientModel, as: 'client', attributes: ['id', 'last_name', 'first_name'] },
+                { model: CompteModel, as: 'compte', attributes: ['id', 'numero_compte'] }
+            ],
+            limit,
+            offset,
+            order: [['created_at', 'DESC']]
+        })
+
+        responseJson.data = {
+            pagination: apiHelpers.getPaginationFormat({ total: count, perPage: limit, currentPage }),
+            list: rows.map((d) => d.get({ plain: true }))
         }
+        responseJson.statut = true
+        res.status(200).json(responseJson)
+    } catch (error) {
+        LogHelpers?.showException?.(error as Error)
+        res.status(400).json(apiHelpers.bindError(error as Error))
     }
+}
 
     static async getByCompte(req: Request, res: Response): Promise<void> {
         const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
@@ -58,8 +72,20 @@ export default class RetraitController {
             const data = req.body
             const nowDate = Sanitizer.getTimeByTimezone()
 
-          const compte = await CompteModel.findOne({ where: { id: data.compte_id } })
+         const compte = await CompteModel.findOne({ where: { id: data.compte_id } })
 if (!compte) throw new Error('__messageFormatted__Compte introuvable')
+
+// Vérifier le statut du compte
+if (compte.getDataValue('status') !== 'active') {
+    throw new Error('__messageFormatted__Ce compte est inactif ou bloqué. Aucune opération n\'est possible.')
+}
+
+// Vérifier le statut du membre
+const clientCheck = await ClientModel.findOne({ where: { id: data.client_id } })
+if (!clientCheck) throw new Error('__messageFormatted__Membre introuvable')
+if (clientCheck.getDataValue('status') !== 'active') {
+    throw new Error('__messageFormatted__Ce membre est inactif ou bloqué. Aucune opération n\'est possible.')
+}
 
 const typeCompte = compte.getDataValue('type_compte')
 const dateEcheance = compte.getDataValue('date_echeance')
@@ -92,21 +118,23 @@ const soldeActuel = Number(compte.getDataValue('solde'))
                 throw new Error(`__messageFormatted__Le solde minimum de ${soldeInitial.toLocaleString()} FCFA (solde d'ouverture) doit être conservé et ne peut pas être retiré`)
             }
 
-            const numeroTransaction = await Sanitizer.uniqueData(RetraitModel, 'numero_transaction', Sanitizer.generateNum(8, 'RET'))
+           const numeroTransaction = await Sanitizer.uniqueData(RetraitModel, 'numero_transaction', Sanitizer.generateNum(8, 'RET'))
+const authUserId = Number(req.headers['auth_user']) || null
 
-            const retrait = await RetraitModel.create({
-                compte_id: data.compte_id,
-                client_id: data.client_id,
-                numero_transaction: numeroTransaction,
-                montant: data.montant,
-                date_retrait: data.date_retrait || nowDate,
-                mode_paiement: data.mode_paiement || null,
-                motif: data.motif || null,
-                observation: data.observation || null,
-                status: 'success',
-                created_at: nowDate,
-                updated_at: nowDate,
-            })
+const retrait = await RetraitModel.create({
+    compte_id: data.compte_id,
+    client_id: data.client_id,
+    numero_transaction: numeroTransaction,
+    montant: data.montant,
+    date_retrait: data.date_retrait || nowDate,
+    mode_paiement: data.mode_paiement || null,
+    motif: data.motif || null,
+    observation: data.observation || null,
+    status: 'success',
+    created_by: authUserId,
+    created_at: nowDate,
+    updated_at: nowDate,
+})
 
             const nouveauSolde = soldeActuel - montant
             await compte.update({ solde: nouveauSolde, updated_at: nowDate })

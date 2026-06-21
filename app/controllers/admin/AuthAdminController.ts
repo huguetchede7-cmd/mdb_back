@@ -113,7 +113,8 @@ if (roles.length === 0) {
   const allRoles = await AdminRoleModel.findAll();
   roles = allRoles.map((r: any) => r.get({ plain: true }));
 }
-responseJson.data = { token: newJwt, username, fullname, avatar, email, phone, kyc, account_type, roles }
+console.log("USER ID:", userDetail.id)
+responseJson.data = { id: userDetail.id, token: newJwt, username, fullname, avatar, email, phone, kyc, account_type, roles }
 responseJson.message = "Connexion effectuée avec succès"
 responseJson.statut = true
     } catch (error) {
