@@ -4,7 +4,7 @@
   "description": "microfinance Backend API",
   "main": "index.ts",
   "scripts": {
-    "start": "tsx ./index.ts",
+    "start": "npx tsx ./index.ts",
     "start:prod": "node dist/index.js",
     "test": "jest --coverage",
     "test_bail": "jest --bail",
