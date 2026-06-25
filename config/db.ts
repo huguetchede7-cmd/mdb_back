@@ -1,8 +1,9 @@
 import { Dialect } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
 
-const NODE_ENV = process.env.NODE_ENV === "test" ? "DEV" : (process.env.NODE_ENV || "DEV");
-
+const NODE_ENV = process.env.NODE_ENV === "test" ? "DEV" : 
+                 process.env.NODE_ENV === "production" ? "PROD" : 
+                 (process.env.NODE_ENV || "DEV");
 // Validation et configuration de la base de données avec valeurs par défaut
 const getDBConfig = () => {
     const isDev = NODE_ENV == 'DEV';
