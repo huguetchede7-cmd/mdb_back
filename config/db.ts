@@ -37,22 +37,16 @@ const sequelizeDB = new Sequelize(
     host: DBConfig.host,
     port: DBConfig.port,
     dialect: DBConfig.dialect,
-    define: {
-      timestamps: false
-    },
-    dialectOptions: {
+    define: { timestamps: false },
+    dialectOptions: {          // ← ICI, remplace le dialectOptions existant
       ssl: {
         rejectUnauthorized: false
-      }
+      },
+      family: 4                // ← ajoute cette ligne
     },
     timezone: '+01:00',
     logging: false,
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    }
+    pool: { max: 5, min: 0, acquire: 30000, idle: 10000 }
   }
 );
 
