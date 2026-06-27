@@ -1,0 +1,63 @@
+nano migrations/20250403213648-add-fcm_token-to-users-table.ts'use strict';
+import { QueryInterface, DataTypes } from 'sequelize';
+
+module.exports = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.addColumn('users', 'fcm_token', {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null
+    });
+  },
+
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.removeColumn('users', 'fcm_token');
+  }
+};module.exports = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.addColumn('users', 'fcm_token', {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null
+    });
+  },
+
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.removeColumn('users', 'fcm_token');
+  }
+};'use strict';
+import { QueryInterface } from 'sequelize';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.sequelize.query(
+      `ALTER TABLE users ADD COLUMN fcm_token VARCHAR(255) NULL DEFAULT NULL AFTER jwt_token;`
+    );
+  },
+
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.sequelize.query(
+      `ALTER TABLE users DROP COLUMN fcm_token;`
+    );
+  }
+};
+
+'use strict';
+import { QueryInterface } from 'sequelize';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.sequelize.query(
+      `ALTER TABLE users ADD COLUMN fcm_token VARCHAR(255) NULL DEFAULT NULL AFTER jwt_token;`
+    );
+  },
+
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.sequelize.query(
+      `ALTER TABLE users DROP COLUMN fcm_token;`
+    );
+  }
+};
+

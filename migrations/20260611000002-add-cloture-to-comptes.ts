@@ -1,11 +1,19 @@
-﻿import { QueryInterface } from 'sequelize';
+﻿import { QueryInterface, DataTypes } from 'sequelize';
 
-export async function up(queryInterface: QueryInterface) {
-    await queryInterface.sequelize.query(
-        `ALTER TABLE comptes MODIFY COLUMN status ENUM('active', 'inactive', 'bloque', 'cloture') NOT NULL DEFAULT 'active'`);
-}
+module.exports = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.changeColumn('comptes', 'status', {
+      type: DataTypes.ENUM('active', 'inactive', 'bloque', 'cloture'),
+      allowNull: false,
+      defaultValue: 'active'
+    });
+  },
 
-export async function down(queryInterface: QueryInterface) {
-    await queryInterface.sequelize.query(
-        `ALTER TABLE comptes MODIFY COLUMN status ENUM('active', 'inactive', 'bloque') NOT NULL DEFAULT 'active'`);
-}
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.changeColumn('comptes', 'status', {
+      type: DataTypes.ENUM('active', 'inactive', 'bloque'),
+      allowNull: false,
+      defaultValue: 'active'
+    });
+  }
+};

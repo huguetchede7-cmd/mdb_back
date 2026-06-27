@@ -1,17 +1,16 @@
 'use strict';
-import { QueryInterface } from 'sequelize';
+import { QueryInterface, DataTypes } from 'sequelize';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface: QueryInterface) {
-    await queryInterface.sequelize.query(
-      `ALTER TABLE users ADD COLUMN fcm_token VARCHAR(255) NULL DEFAULT NULL AFTER jwt_token;`
-    );
+    await queryInterface.addColumn('users', 'fcm_token', {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null
+    });
   },
 
   async down(queryInterface: QueryInterface) {
-    await queryInterface.sequelize.query(
-      `ALTER TABLE users DROP COLUMN fcm_token;`
-    );
+    await queryInterface.removeColumn('users', 'fcm_token');
   }
 };
