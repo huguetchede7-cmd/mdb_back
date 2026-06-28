@@ -51,9 +51,10 @@ export default class CompteController {
         responseJson.message = 'Liste des comptes récupérée avec succès'
         res.status(200).json(responseJson)
     } catch (error) {
-        LogHelpers?.showException?.(error as Error)
-        res.status(400).json(apiHelpers.bindError(error as Error))
-    }
+    console.error('ERREUR COMPTES LIST:', error)  // ← ajoute cette ligne
+    LogHelpers?.showException?.(error as Error)
+    res.status(400).json(apiHelpers.bindError(error as Error))
+}
 }
     static async create(req: Request, res: Response): Promise<void> {
         const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON }
