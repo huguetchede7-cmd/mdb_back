@@ -16,6 +16,8 @@ interface UserAttributes {
     avatar?: string;
     email?: string | null;
     phone?: string | null;
+    whatsapp?: string | null;
+    client_ref?: string | null;
     ban_statut?: boolean;
     kyc?: '-1' | '0' | '1';
     account_type?: number | null;
@@ -40,6 +42,8 @@ class UserModel extends Model<UserAttributes> implements UserAttributes {
     public avatar!: string;
     public email!: string | null;
     public phone!: string | null;
+    public whatsapp!: string | null;
+    public client_ref!: string | null;
     public ban_statut!: boolean;
     public kyc!: '-1' | '0' | '1';
     public account_type!: number | null;
@@ -105,6 +109,17 @@ UserModel.init({
         allowNull: true,
         defaultValue: null,
         unique: true,
+    },
+    whatsapp: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null,
+    },
+    client_ref: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null,
+    unique: true,
     },
     ban_statut: {
         type: DataTypes.BOOLEAN,

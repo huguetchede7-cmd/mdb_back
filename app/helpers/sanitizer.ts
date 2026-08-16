@@ -1,21 +1,10 @@
 import momentTimeZone from 'moment-timezone';
 import UserModel from '../../models/UserModel';
 import slugify from "slugify";
-import BrandModel from "../../models/BrandModel";
-import NewsModel from "../../models/NewsModel";
-import ServiceModel from "../../models/ServiceModel";
-import ShopModel from "../../models/ShopModel";
-import ProductModel from "../../models/ProductModel";
-import BannerTextModel from "../../models/BannerTextModel";
-import AppointmentModel from "../../models/AppointmentModel";
-import EventModel from "../../models/EventModel";
-import OfferModel from '../../models/OfferModel';
-import GlassCategoryModel from '../../models/GlassCategoryModel';
-import GlassShapeModel from '../../models/GlassShapeAttributes';
+import { Model, ModelStatic } from 'sequelize';
 //import { Model, Optional } from 'sequelize';
 
-type modelType = typeof UserModel|typeof BrandModel|typeof NewsModel|typeof OfferModel | typeof ServiceModel| typeof ShopModel|typeof ProductModel|typeof BannerTextModel|typeof EventModel|typeof AppointmentModel|typeof GlassCategoryModel |typeof GlassShapeModel;
-
+type modelType = ModelStatic<Model>;
 
 export const Sanitizer = {
    
@@ -26,7 +15,6 @@ export const Sanitizer = {
             const whereClause: { [key: string]: string }  = {}
             let foundCount = 0
             whereClause[column] = generatedData
-            // @ts-expect-error - model is a model type
             while (await model.findOne({
             attributes: [column],
             where: whereClause

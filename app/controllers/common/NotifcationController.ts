@@ -8,8 +8,6 @@ import { LogHelpers } from '../../helpers/LogHelpers';
 import {Sanitizer} from '../../helpers/sanitizer';
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { FirebaseService } from '../../services/FirebaseService';
-
 export class NotifcationController {
 
     static #includes = [
@@ -107,18 +105,6 @@ export class NotifcationController {
             
             const getUserDetail = await UserModel.findByPk(data?.to_user)
             const getUserDetailData = getUserDetail?.get()
-
-            // Send fcm puh notification 
-            if (options?.sendPushNotification !== false && getUserDetailData?.fcm_token) {
-                const firebaseAdminClient = new FirebaseService()
-                await firebaseAdminClient.sendNotification({
-                    token: getUserDetailData?.fcm_token, 
-                    payload: {
-                        title: data.title,
-                        body: data?.short_description ?? data?.description ?? "Vous avez une notification en attente de lecture",
-                    } 
-                })
-            }  
 
             // send Email
             if (options?.sendEmailToUser && typeof getUserDetail === "object" && getUserDetailData?.email) {

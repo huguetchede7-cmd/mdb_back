@@ -12,7 +12,7 @@ export class GendersHelpers {
     }
 
     static format(genderNumber: number) {
-        const genders = []
+    const genders: string[] = []
 
         switch (genderNumber) {
             case 1:

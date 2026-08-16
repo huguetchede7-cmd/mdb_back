@@ -19,11 +19,7 @@ import { EmailClientAppointmentConfirmation } from '../ressources/email_template
 import { EmailAdminAppointmentUpdate } from '../ressources/email_template/admin/emailAdminAppointmentUpdate'
 import { emailClientAppointmentTerminated } from '../ressources/email_template/clients/appointment/emailClientAppointmentTerminated'
 import { EmailClientAppointmentCanceled } from '../ressources/email_template/clients/appointment/emailClientAppointmentCanceled'
-import { EmailClientOrderConfirmed } from '../ressources/email_template/clients/orders/EmailClientOrderConfirmed'
-import { EmailAdminNotifNewOrder } from '../ressources/email_template/admin/emailAdminNotifNewOrder'
-import {
-  EmailClientOrderStatusChanged
-} from '../ressources/email_template/clients/orders/EmailClientOrderStatusChanged'
+import {EmailClientOrderStatusChanged}from '../ressources/email_template/clients/orders/EmailClientOrderStatusChanged'
 import { emailClientAppointmentRemind } from '../ressources/email_template/clients/appointment/emailClientAppointmentBookedRemind'
 import { EmailWelcomeTemplateForNewUser } from '../ressources/email_template/clients/EmailWelcomeTemplateForNewUser'
 import { emailCommentApprovedToClient } from '../ressources/email_template/clients/CommentEmailToClient'
@@ -213,12 +209,6 @@ export class EmailHelpers {
 
       case EmailHelpers.TYPE_APPOINTMENT_CANCELLED:
         return EmailClientAppointmentCanceled(data)
-
-      case EmailHelpers.TYPE_CLIENT_ORDER_VALIDETED:
-        return EmailClientOrderConfirmed(data)
-
-      case EmailHelpers.TYPE_ADMIN_NOTIF_NEW_ORDER:
-        return EmailAdminNotifNewOrder(data)
 
       case EmailHelpers.TYPE_CLIENT_ORDER_STATUS_CHANGED:
         return EmailClientOrderStatusChanged(data)

@@ -13,10 +13,10 @@ export class TokenHelper {
       const nowDate = Sanitizer.getTimeByTimezone()
       const expirationMinutes = payload.expirationMinutes ?? TOKEN_EXPIRATION_MINUTES
       const { dbTransaction, ...jwtPayload } = payload
-      const token = jwt.sign({...jwtPayload, expirationTime: Sanitizer.getTimeByTimezone(undefined, undefined, expirationMinutes as number)}, process.env.SECRET_JWT_KEY as string, {
-        algorithm: "HS256",
-        expiresIn: `${expirationMinutes}m`
-      })
+     const token = jwt.sign({...jwtPayload, expirationTime: Sanitizer.getTimeByTimezone(undefined, undefined, expirationMinutes as number)}, process.env.SECRET_JWT_KEY as string, {
+    algorithm: "HS256",
+    expiresIn: (expirationMinutes as number) * 60
+    })
 
       if (dbTransaction) {
         await TokenModel.create({token: token,type: payload.action, user_id: payload.user, created_at: nowDate, updated_at: nowDate}, {transaction: dbTransaction})
