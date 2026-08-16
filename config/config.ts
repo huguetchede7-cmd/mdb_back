@@ -18,16 +18,18 @@ export const config = {
         }
     },
     production: {
-  dialect: 'postgres',
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT || '5432'),
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  dialectOptions: {
-    ssl: {
-      rejectUnauthorized: false
+    dialect: process.env.BD_DIALECT_PROD,
+    host: process.env.BD_HOST_PROD,
+    port: parseInt(process.env.BD_PORT_PROD || '3306'),
+    username: process.env.BD_USERNAME_PROD,
+    password: process.env.BD_PASSWORD_PROD,
+    database: process.env.BD_DATABASE_PROD,
+    connectTimeout: process.env.BD_CONNECT_TIMEOUT_PROD,
+    charset: process.env.BD_CHARSET_PROD,
+    dialectOptions: {
+        ssl: {
+            rejectUnauthorized: false
+        }
     }
-  }
 }
 };
