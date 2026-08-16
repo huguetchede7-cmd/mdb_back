@@ -1,37 +1,23 @@
-import { Dialect } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
+import { config } from "./config";
 
-const getDBConfig = () => {
-  return {
-    dialect: 'postgres' as Dialect,
-    host: process.env.DB_HOST!,
-    port: parseInt(process.env.DB_PORT || '5432'),
-    username: process.env.DB_USER!,
-    password: process.env.DB_PASSWORD!,
-    database: process.env.DB_NAME!,
-    connectTimeout: 30000,
-  };
-};
-
-const DBConfig = getDBConfig();
+const env = (process.env.NODE_ENV || 'development') as 'development' | 'production';
+const DBConfig = config[env];
 
 const sequelizeDB = new Sequelize(
-  DBConfig.database,
-  DBConfig.username,
-  DBConfig.password,
-  {
-    host: DBConfig.host,
-    port: DBConfig.port,
-    dialect: DBConfig.dialect,
-    define: { timestamps: false },
-    dialectOptions: {
-      ssl: { rejectUnauthorized: false },
-      family: 4
-    },
-    timezone: '+01:00',
-    logging: false,
-    pool: { max: 5, min: 0, acquire: 30000, idle: 10000 }
-  }
+    DBConfig.database as string,
+    DBConfig.username as string,
+    DBConfig.password as string,
+    {
+        host: DBConfig.host,
+        port: DBConfig.port,
+        dialect: DBConfig.dialect as any,
+        define: { timestamps: false },
+        dialectOptions: DBConfig.dialectOptions,
+        timezone: '+01:00',
+        logging: false,
+        pool: { max: 5, min: 0, acquire: 30000, idle: 10000 }
+    }
 );
 
 export default sequelizeDB;
