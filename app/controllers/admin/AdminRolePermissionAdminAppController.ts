@@ -30,7 +30,7 @@ export default class AdminRolePermissionAdminAppController {
     const responseJson = { ...apiHelpers.DEFAULT_RESPONSE_JSON };
 
     try {
-      const adminId = parseInt(req.params.id);
+      const adminId = parseInt(req.params.id as string);
 
       const permissions = await AdminRolePermissionModel.findAll({
         where: { admin_id: adminId },

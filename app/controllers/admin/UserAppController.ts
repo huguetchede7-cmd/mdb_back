@@ -50,8 +50,6 @@ export default class UserAppController {
           'avatar',
           'ban_statut',
           'email_verified_at',
-          'whatsapp',
-          'client_ref',
           'created_at'
         ],
         limit,
@@ -95,8 +93,7 @@ export default class UserAppController {
                 id: userId,
                 account_type: ACCOUNT_TYPES.CLIENT
               },
-              attributes: ['id', 'firstname', 'lastname', 'email', 'phone', 'whatsapp', 'avatar', 'client_ref','ban_statut','email_verified_at','created_at'],
-            }
+              attributes: ['id', 'firstname', 'lastname', 'email', 'phone', 'avatar','ban_statut','email_verified_at','created_at'],            }
           )
       if (!user){
         throw new Error('__messageFormatted__user__' + 'Utilisateur non trouvé')
@@ -175,7 +172,6 @@ export default class UserAppController {
         phone_verified_at: null,
         ban_statut: false,
         kyc: '-1',
-        client_ref:data.client_ref||null,
         created_at: nowDate,
         updated_at: nowDate
       })
@@ -189,7 +185,6 @@ export default class UserAppController {
           mailType: EmailHelpers.TYPE_WELCOME_NEW_CLIENT,
           email: data.email ?? '',
           password:tempPassword ?? "",
-          clientRef:data.client_ref || null,
         }
       }, { delay: 5000 });
 
@@ -222,7 +217,7 @@ export default class UserAppController {
         return
       }
 
-      const userId = req.params.id
+      const userId = parseInt(req.params.id as string)
       const data = matchedData(req)
       const nowDate = Sanitizer.getTimeByTimezone()
 
@@ -264,24 +259,12 @@ export default class UserAppController {
         throw new Error('__messageFormatted__phone__Cet numéro de téléphone est déjà utilisé')
       }
 
-      // Chekc client ef
-      if (data.client_ref) {
-        const clientRefExists = await UserModel.findOne({
-          where: { client_ref: data.client_ref, id: { [Op.ne]: userId } }
-        })
-        if (clientRefExists) {
-          throw new Error('__messageFormatted__client_ref__Ce client ref est déjà utilisé')
-        }
-      }
-
       await user.update(
         {
           firstname: data.firstname ?? user.firstname,
           lastname: data.lastname ?? user.lastname,
           email: data.email ?? user.email,
-          whatsapp: data.whatsapp ? Sanitizer.phoneClean(data.whatsapp) : user.whatsapp,
           phone: data.phone ? Sanitizer.phoneClean(data.phone) : user.phone,
-          client_ref: data.client_ref ?? user.client_ref,
           updated_at: nowDate
         }
       )

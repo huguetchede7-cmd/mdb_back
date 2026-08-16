@@ -65,7 +65,7 @@ const random = Math.floor(Math.random() * 900 + 100).toString()
 const memberNumber = `cmmb-${new Date().getFullYear()}${timestamp}${random}`
 
             // Gestion de la photo
-let photoPath = null;
+let photoPath: string | null = null;
 if (req.files && req.files.photo) {
     const photo = req.files.photo as any;
     const fileName = `${memberNumber}_${Date.now()}${path.extname(photo.name)}`;
@@ -109,10 +109,11 @@ res.status(201).json(responseJson)
             LogHelpers?.showException?.(error as Error)
 
             if (error.name === 'SequelizeUniqueConstraintError') {
-                responseJson.statut = false
-                responseJson.message = "Un client avec ce numéro de téléphone ou ce numéro de pièce existe déjà."
-                return res.status(409).json(responseJson)
-            }
+  responseJson.statut = false
+  responseJson.message = "Un client avec ce numéro de téléphone ou ce numéro de pièce existe déjà."
+  res.status(409).json(responseJson)
+  return
+}
 
             res.status(400).json(apiHelpers.bindError(error as Error))
         }
