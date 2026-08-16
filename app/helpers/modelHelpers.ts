@@ -11,7 +11,7 @@ const modelHelpers = {
         where: { deleted_at: null }
     },
 
-    dateFormat: (rawValue: Date | string | null, targetFormat = 'DD MMM YYYY HH:mm') => {
+    dateFormat: (rawValue: Date | string | null | undefined, targetFormat = 'DD MMM YYYY HH:mm') => {
         return rawValue ? moment(rawValue).format(targetFormat) : null;
     },
 
