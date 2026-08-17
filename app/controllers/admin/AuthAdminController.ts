@@ -44,10 +44,7 @@ export class AuthAdminController {
         throw new Error("__messageFormatted__email__" + Messengers.error.compte.statut_bloquer)
       }
 
-console.log("Password saisi :", data.password);
-console.log("Password en base :", targetUserDetail.password);
 const isPasswordMatch = await BcryptCheck(data.password, targetUserDetail.password as string)
-console.log("Match :", isPasswordMatch);
       if (!isPasswordMatch) {
         throw new Error("__messageFormatted__password__" + Messengers.error.password.incorrect)
       }
@@ -113,13 +110,11 @@ if (roles.length === 0) {
   const allRoles = await AdminRoleModel.findAll();
   roles = allRoles.map((r: any) => r.get({ plain: true }));
 }
-console.log("USER ID:", userDetail.id)
 responseJson.data = { id: userDetail.id, token: newJwt, username, fullname, avatar, email, phone, kyc, account_type, roles }
 responseJson.message = "Connexion effectuée avec succès"
 responseJson.statut = true
    } catch (error) {
     LogHelpers.showException(error as Error, true)
-    console.error("ERREUR FETCHUSER:", error)
     responseJson.statut = false
     responseJson.message = Messengers.error.general.default
 }
