@@ -117,11 +117,12 @@ console.log("USER ID:", userDetail.id)
 responseJson.data = { id: userDetail.id, token: newJwt, username, fullname, avatar, email, phone, kyc, account_type, roles }
 responseJson.message = "Connexion effectuée avec succès"
 responseJson.statut = true
-    } catch (error) {
-      LogHelpers.showException(error as Error)
-      responseJson.statut = false
-      responseJson.message = Messengers.error.general.default
-    }
+   } catch (error) {
+    LogHelpers.showException(error as Error, true)
+    console.error("ERREUR FETCHUSER:", error)
+    responseJson.statut = false
+    responseJson.message = Messengers.error.general.default
+}
     return responseJson
   }
 
